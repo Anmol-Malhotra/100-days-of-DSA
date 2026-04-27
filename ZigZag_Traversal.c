@@ -1,0 +1,124 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Define structure for a Binary Tree node
+struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+};
+
+// Queue structure for building tree from level-order input
+struct Queue {
+    struct Node** arr;
+    int front, rear, size;
+};
+
+// Function to create a new node
+struct Node* createNode(int value) {
+    if (value == -1) return NULL;
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->data = value;
+    newNode->left = newNode->right = NULL;
+    return newNode;
+}
+
+// Initialize queue
+struct Queue* createQueue(int size) {
+    struct Queue* q = (struct Queue*)malloc(sizeof(struct Queue));
+    q->arr = (struct Node**)malloc(size * sizeof(struct Node*));
+    q->front = q->rear = 0;
+    q->size = size;
+    return q;
+}
+
+// Enqueue
+void enqueue(struct Queue* q, struct Node* node) {
+    if (node != NULL) {
+        q->arr[q->rear++] = node;
+    }
+}
+
+// Dequeue
+struct Node* dequeue(struct Queue* q) {
+    if (q->front == q->rear) return NULL;
+    return q->arr[q->front++];
+}
+
+// Build Binary Tree from level-order input
+struct Node* buildTree(int arr[], int n) {
+    if (n == 0) return NULL;
+    struct Node* root = createNode(arr[0]);
+    struct Queue* q = createQueue(n);
+    enqueue(q, root);
+
+    int i = 1;
+    while (i < n) {
+        struct Node* current = dequeue(q);
+        if (current != NULL) {
+            // Left child
+            current->left = createNode(arr[i++]);
+            enqueue(q, current->left);
+
+            if (i < n) {
+                // Right child
+                current->right = createNode(arr[i++]);
+                enqueue(q, current->right);
+            }
+        }
+    }
+    return root;
+}
+
+// Zigzag traversal using two stacks
+void zigzagTraversal(struct Node* root) {
+    if (root == NULL) return;
+
+    // Two stacks
+    struct Node* currentLevel[1000];
+    struct Node* nextLevel[1000];
+    int currentTop = -1, nextTop = -1;
+    int leftToRight = 1;
+
+    currentLevel[++currentTop] = root;
+
+    while (currentTop >= 0) {
+        struct Node* node = currentLevel[currentTop--];
+        printf("%d ", node->data);
+
+        if (leftToRight) {
+            if (node->left) nextLevel[++nextTop] = node->left;
+            if (node->right) nextLevel[++nextTop] = node->right;
+        } else {
+            if (node->right) nextLevel[++nextTop] = node->right;
+            if (node->left) nextLevel[++nextTop] = node->left;
+        }
+
+        if (currentTop < 0) {
+            leftToRight = !leftToRight;
+            // Swap stacks
+            for (int i = 0; i <= nextTop; i++) {
+                currentLevel[i] = nextLevel[i];
+            }
+            currentTop = nextTop;
+            nextTop = -1;
+        }
+    }
+    printf("\n");
+}
+
+int main() {
+    int N;
+    scanf("%d", &N);
+
+    int arr[N];
+    for (int i = 0; i < N; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    struct Node* root = buildTree(arr, N);
+
+    zigzagTraversal(root);
+
+    return 0;
+}
